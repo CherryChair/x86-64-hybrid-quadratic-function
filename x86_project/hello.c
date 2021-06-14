@@ -160,10 +160,33 @@ int main()
                 al_draw_line(0, 540, 1920, 540, al_map_rgb_f(0, 0, 0), 1);
                 al_draw_line(960, 0, 960, 1080, al_map_rgb_f(0, 0, 0), 1);
                 al_draw_textf(font, al_map_rgb(0, 0, 0), 1920, 0, ALLEGRO_ALIGN_RIGHT, "y = %.1f*x^2+%.1f*x+%.1f", a, b, c);
-                ALLEGRO_BITMAP* mysha = al_load_bitmap("mysha.png");
-                must_init(mysha, "mysha");
-                al_draw_bitmap(mysha, 0, 0, 0);
-                al_destroy_bitmap(mysha);
+
+
+
+                FILE * file;
+                file = fopen("mysha.png", "rb");
+                if (file == NULL) return 1;
+                fseek(file, 0, SEEK_END);
+                long int size = ftell(file);
+                fclose(file);
+                file = fopen("mysha.png", "rb");
+                unsigned char * pPixelBuffer = (unsigned char *) malloc(size);
+                int bytes_read = fread(pPixelBuffer, sizeof(unsigned char), size, file);
+                fclose(file);
+
+
+                file = fopen("output.png", "wb");
+                int bytes_written = fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
+                fclose(file);
+                free(pPixelBuffer);
+
+
+
+                ALLEGRO_BITMAP* output = al_load_bitmap("output.png");
+                must_init(output, "oputput");
+                al_draw_bitmap(output, 0, 0, 0);
+                al_destroy_bitmap(output);
+                
             }
             al_flip_display();
 
