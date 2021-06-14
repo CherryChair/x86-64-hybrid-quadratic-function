@@ -5,6 +5,7 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_ttf.h>
+#include "f.h"
 
 enum chosenParameter{A, B, C, D, None};
 
@@ -157,7 +158,7 @@ int main()
                 int bytes_read = fread(pPixelBuffer, sizeof(unsigned char), size, file);
                 fclose(file);
 
-
+                drawQuadratic(pPixelBuffer, 1080, 1920, a, b, c, d);
 
                 file = fopen("output.bmp", "wb");
                 int bytes_written = fwrite(pPixelBuffer, sizeof(unsigned char), size, file);

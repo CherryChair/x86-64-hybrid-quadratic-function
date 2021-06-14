@@ -1,23 +1,15 @@
-section .text
+	section .text
 
-global f
-f:
-	push ebp
-	mov ebp, esp
-	mov eax,  [ebp+8]
+global drawQuadratic
+drawQuadratic:
+_start:   mov       rax, 1                  ; system call for write
+          mov       rdi, 1                  ; file handle 1 is stdout
+          mov       rsi, message            ; address of string to output
+          mov       rdx, 13                 ; number of bytes
+          syscall                           ; invoke operating system to do the write
+		  ret
 
-begin:
-	mov cl, [eax]
-	cmp cl, 0
-	jz end
-
-	add cl, 1
-	mov [eax], cl
-	inc eax
-	jmp begin
-
-end:
-	mov esp, ebp
-	pop ebp
-	ret
+          section   .data
+message:  db        "Hello, World", 10      ; note the newline at the end
+	
 
