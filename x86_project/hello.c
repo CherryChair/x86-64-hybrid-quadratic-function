@@ -4,6 +4,7 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h>
+#include "allegro5/allegro_ttf.h"
 
 enum chosenParameter{A, B, C, D, None};
 
@@ -36,11 +37,15 @@ int main()
     ALLEGRO_DISPLAY *disp = al_create_display(1920, 1080);
     must_init(disp, "display");
 
-    ALLEGRO_FONT *font = al_create_builtin_font();
+    must_init(al_init_font_addon(), "font addon");
+    must_init(al_init_ttf_addon(), "ttf addon");
+    ALLEGRO_FONT *font = al_load_ttf_font("OpenSans-Regular.ttf", 18, 0);
     must_init(font, "font");
 
     must_init(al_init_image_addon(), "image addon");
-    
+   
+    ALLEGRO_BITMAP* currentFunction = al_load_bitmap("output.bmp");
+    must_init(currentFunction, "output");
 
     must_init(al_init_primitives_addon(), "primitives");
 
@@ -59,6 +64,7 @@ int main()
     d = 0.1;
 
     enum chosenParameter keyPressed = None;
+    
 
     al_start_timer(timer);
     while (1)
@@ -138,54 +144,61 @@ int main()
         if (redraw && al_is_event_queue_empty(queue))
         {
             al_clear_to_color(al_map_rgb(255, 255, 255));
-            al_draw_textf(font, al_map_rgb(0, 0, 0), 0, 0, 0, "a = %.1f", a);
-            al_draw_textf(font, al_map_rgb(0, 0, 0), 0, 10, 0, "b = %.1f", b);
-            al_draw_textf(font, al_map_rgb(0, 0, 0), 0, 20, 0, "c = %.1f", c);
-            al_draw_textf(font, al_map_rgb(0, 0, 0), 0, 30, 0, "d = %.1f", d);
+            
+            al_draw_bitmap(currentFunction, 0, 0, 0);
+            al_draw_line(0, 540, 1920, 540, al_map_rgb_f(0, 0, 0), 1);
+            al_draw_line(960, 0, 960, 1080, al_map_rgb_f(0, 0, 0), 1);
+            al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 0, 0, "a = %.1f", a);
+            al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 20, 0, "b = %.1f", b);
+            al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 40, 0, "c = %.1f", c);
+            al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 60, 0, "d = %.1f", d);
+            
+            
             switch (keyPressed)
             {
             case A:
-                al_draw_textf(font, al_map_rgb(255, 0, 0), 0, 0, 0, "a = %.1f", a);
+                al_draw_textf(font, al_map_rgb(255, 0, 0), 10, 0, 0, "a = %.1f", a);
                 break;
             case B:
-                al_draw_textf(font, al_map_rgb(255, 0, 0), 0, 10, 0, "b = %.1f", b);
+                al_draw_textf(font, al_map_rgb(255, 0, 0), 10, 20, 0, "b = %.1f", b);
                 break;
             case C:
-                al_draw_textf(font, al_map_rgb(255, 0, 0), 0, 20, 0, "c = %.1f", c);
+                al_draw_textf(font, al_map_rgb(255, 0, 0), 10, 40, 0, "c = %.1f", c);
                 break;
             case D:
-                al_draw_textf(font, al_map_rgb(255, 0, 0), 0, 30, 0, "d = %.1f", d);
+                al_draw_textf(font, al_map_rgb(255, 0, 0), 10, 60, 0, "d = %.1f", d);
                 break;
             case None:
-                al_draw_line(0, 540, 1920, 540, al_map_rgb_f(0, 0, 0), 1);
-                al_draw_line(960, 0, 960, 1080, al_map_rgb_f(0, 0, 0), 1);
-                al_draw_textf(font, al_map_rgb(0, 0, 0), 1920, 0, ALLEGRO_ALIGN_RIGHT, "y = %.1f*x^2+%.1f*x+%.1f", a, b, c);
-
-
-
+                al_clear_to_color(al_map_rgb(255, 255, 255));
                 FILE * file;
-                file = fopen("mysha.png", "rb");
+                file = fopen("out.bmp", "rb");
                 if (file == NULL) return 1;
                 fseek(file, 0, SEEK_END);
                 long int size = ftell(file);
                 fclose(file);
-                file = fopen("mysha.png", "rb");
+                file = fopen("out.bmp", "rb");
                 unsigned char * pPixelBuffer = (unsigned char *) malloc(size);
                 int bytes_read = fread(pPixelBuffer, sizeof(unsigned char), size, file);
                 fclose(file);
 
 
-                file = fopen("output.png", "wb");
+                file = fopen("output.bmp", "wb");
                 int bytes_written = fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
                 fclose(file);
                 free(pPixelBuffer);
 
 
 
-                ALLEGRO_BITMAP* output = al_load_bitmap("output.png");
-                must_init(output, "oputput");
-                al_draw_bitmap(output, 0, 0, 0);
-                al_destroy_bitmap(output);
+                currentFunction = al_load_bitmap("output.bmp");
+                must_init(currentFunction, "output");
+                al_draw_bitmap(currentFunction, 0, 0, 0);
+                al_draw_line(0, 540, 1920, 540, al_map_rgb_f(0, 0, 0), 1);
+                al_draw_line(960, 0, 960, 1080, al_map_rgb_f(0, 0, 0), 1);
+                al_draw_textf(font, al_map_rgb(0, 0, 0), 1900, 0, ALLEGRO_ALIGN_RIGHT, "y = %.1f*x^2+%.1f*x+%.1f", a, b, c);
+                al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 0, 0, "a = %.1f", a);
+                al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 20, 0, "b = %.1f", b);
+                al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 40, 0, "c = %.1f", c);
+                al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 60, 0, "d = %.1f", d);
                 
             }
             al_flip_display();
@@ -193,7 +206,7 @@ int main()
             redraw = false;
         }
     }
-    
+    al_destroy_bitmap(currentFunction);
     al_destroy_font(font);
     al_destroy_display(disp);
     al_destroy_timer(timer);
