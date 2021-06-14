@@ -74,24 +74,19 @@ int main()
 
         switch (event.type)
         {
-        // case ALLEGRO_EVENT_TIMER:
-        //     // once again, no game logic. fishy? maybe.
-        //     redraw = true;
-        //     break;
-
         case ALLEGRO_EVENT_KEY_CHAR:
             redraw = true;
             if (event.keyboard.keycode == ALLEGRO_KEY_A)
                 keyPressed = A;
-            if (event.keyboard.keycode == ALLEGRO_KEY_B)
+            else if (event.keyboard.keycode == ALLEGRO_KEY_B)
                 keyPressed = B;
-            if (event.keyboard.keycode == ALLEGRO_KEY_C)
+            else if (event.keyboard.keycode == ALLEGRO_KEY_C)
                 keyPressed = C;
-            if (event.keyboard.keycode == ALLEGRO_KEY_D)
+            else if (event.keyboard.keycode == ALLEGRO_KEY_D)
                 keyPressed = D;
-            if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
+            else if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
                 keyPressed = None;
-            if (event.keyboard.keycode == ALLEGRO_KEY_UP)
+            else if (event.keyboard.keycode == ALLEGRO_KEY_UP)
                 switch (keyPressed)
                 {
                 case A:
@@ -110,7 +105,7 @@ int main()
                 default:
                     break;
                 }
-            if (event.keyboard.keycode == ALLEGRO_KEY_DOWN)
+            else if (event.keyboard.keycode == ALLEGRO_KEY_DOWN)
                 switch (keyPressed)
                 {
                 case A:
@@ -130,7 +125,6 @@ int main()
                 default:
                     break;
                 }
-
             if (event.keyboard.keycode != ALLEGRO_KEY_ESCAPE)
                 break;
 
@@ -155,13 +149,13 @@ int main()
 
                 file = fopen("in.bmp", "rb");
                 unsigned char * pPixelBuffer = (unsigned char *) malloc(size);
-                int bytes_read = fread(pPixelBuffer, sizeof(unsigned char), size, file);
+                fread(pPixelBuffer, sizeof(unsigned char), size, file);
                 fclose(file);
 
                 drawQuadratic(pPixelBuffer, 1080, 1920, a, b, c, d);
 
                 file = fopen("output.bmp", "wb");
-                int bytes_written = fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
+                fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
                 fclose(file);
                 free(pPixelBuffer);
         
@@ -191,6 +185,8 @@ int main()
                 break;
             case D:
                 al_draw_textf(font, al_map_rgb(255, 0, 0), 10, 60, 0, "d = %.1f", d);
+                break;
+            default:
                 break;
             }
             al_flip_display();
