@@ -7,7 +7,7 @@
 #include <allegro5/allegro_ttf.h>
 #include "f.h"
 
-enum chosenParameter{A, B, C, D, None};
+enum chosenParameter{A, B, C, D, Enter};
 
 
 
@@ -64,7 +64,7 @@ int main()
     c = 1;
     d = 0.1;
 
-    enum chosenParameter keyPressed = None;
+    enum chosenParameter keyPressed = Enter;
     
 
     al_start_timer(timer);
@@ -85,7 +85,7 @@ int main()
             else if (event.keyboard.keycode == ALLEGRO_KEY_D)
                 keyPressed = D;
             else if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
-                keyPressed = None;
+                keyPressed = Enter;
             else if (event.keyboard.keycode == ALLEGRO_KEY_UP)
                 switch (keyPressed)
                 {
@@ -125,8 +125,13 @@ int main()
                 default:
                     break;
                 }
+            else
+            {
+                redraw = false;
+            }
             if (event.keyboard.keycode != ALLEGRO_KEY_ESCAPE)
                 break;
+        
 
         case ALLEGRO_EVENT_DISPLAY_CLOSE:
             done = true;
@@ -138,7 +143,7 @@ int main()
 
         if (redraw && al_is_event_queue_empty(queue))
         {
-            if (keyPressed == None)
+            if (keyPressed == Enter)
             {
                 FILE * file;
                 file = fopen("in.bmp", "rb");
