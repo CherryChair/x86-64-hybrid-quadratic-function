@@ -58,7 +58,7 @@ int main()
     bool redraw = true;
     ALLEGRO_EVENT event;
 
-    float a, b, c, d;
+    double a, b, c, d;
     a = 1;
     b = 2;
     c = 1;
@@ -157,7 +157,7 @@ int main()
                 fread(pPixelBuffer, sizeof(unsigned char), size, file);
                 fclose(file);
 
-                drawQuadratic(pPixelBuffer, 1080, 1920, a, b, c, d);
+                drawQuadratic(pPixelBuffer, 1920, 1080, a, b, c, d);
 
                 file = fopen("output.bmp", "wb");
                 fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
