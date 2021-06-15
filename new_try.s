@@ -15,6 +15,7 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
+    mov r14, 60
    
     ;x = -b/2a
     movsd xmm4, xmm1
@@ -29,6 +30,7 @@ drawQuadratic:
     mulsd xmm5, xmm4
     addsd xmm5, xmm2
 
+b_4_loop:
     ;x_l = x, x_r = x+d
     movsd xmm6, xmm4
     movsd xmm7, xmm4
@@ -85,6 +87,17 @@ right:
 
 
 found:
+
+    ;xmm8 = x_t, xmm9 = y_t
+    ;xmm4 = x, xmm5 = y
+
+    ;draw
+    movsd xmm4, xmm8
+    movsd xmm5, xmm9
+    dec r14
+    jnz b_4_loop
+
+
     mov rdi, coordinates
     mov eax, 2
     movsd xmm0, xmm8
@@ -99,6 +112,7 @@ found:
     movsd xmm3, [rbp - 48]
     mov eax, 4
     jmp end
+
 
 end:
     mov ecx, edx
