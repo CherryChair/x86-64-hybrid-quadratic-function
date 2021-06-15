@@ -15,7 +15,8 @@ drawQuadratic:
     movsd [rbp - 32], xmm1
     movsd [rbp - 40], xmm2
     movsd [rbp - 48], xmm3
-    mov rbx, 1000
+    mov rbx, 2
+    mov rcx, 100
 
     
 
@@ -57,89 +58,78 @@ drawQuadratic:
     addsd xmm5, xmm2
 
     ;we do bisection
-    ;xmm6 - l_x left_x distance from c_x
-    ;xmm7 - r_x right_x distance from c_x
+    ;xmm6 - l_x left x
+    ;xmm7 - r_x right x
 
-    ;xmm8 - t_x center x distance from c_x
-    ;xmm9 - t_y center y distance from c_y
+    ;xmm8 - t_x center x
+    ;xmm9 - t_y center y
 
 loop1:
-    
-    ;l_x = 0, r_x = S
-    movsd xmm6, [rel zero]
-    movsd xmm7, xmm3
+    dec rcx
+    cmp rcx, 0
+    je end
+    ;l_x = c_x, r_x = c_x+s
+    movsd xmm6, xmm4
+    movsd xmm7, xmm4
+    addsd xmm7, xmm3
 
 
 loop2:
-    dec ebx
-    cmp ebx, 0
-    je draw
+    
     ;t_x = (l_x+r_x)/2
     movsd xmm8, xmm6
     addsd xmm8, xmm7
     divsd xmm8, [rel two]
 
-    ;t_y = 2a*c_x
+    ;t_y = a*t_x
     movsd xmm9, xmm0
-    mulsd xmm9, xmm4
-    mulsd xmm9, [rel two]
-    
-    ;xmm10 = a*t_x
-    movsd xmm10, xmm0
-    mulsd xmm10, xmm8
-    
-    ;t_y=2a*c_x+a*t_x+b
-    addsd xmm9, xmm10
-    addsd xmm9, xmm1
-    
-    ;t_y = 2a*c_x*t_x + a*t_x^2 + b*t_x
     mulsd xmm9, xmm8
+    ;t_y = a*t_x^2+b*t_x+c
+    addsd xmm9, xmm1
+    mulsd xmm9, xmm8
+    addsd xmm9, xmm2
 
 
-    ;xmm10 = x_t^2 + y_t^2
+    ;xmm10 = (t_x-c_x)^2 + (t_y-c_y)^2
     movsd xmm10, xmm8
     movsd xmm11, xmm9
+    subsd xmm10, xmm4
+    subsd xmm11, xmm5
     mulsd xmm10, xmm10
     mulsd xmm11, xmm11 
     addsd xmm10, xmm11
+
     ;xmm11 = d^2
     movsd xmm11, xmm3
     mulsd xmm11, xmm11
 
-    ;if t_x^2+t_y^2 > d^2
-    subsd xmm10, xmm11
+    dec rbx
+    cmp rbx, 0
+    je draw
 
-    subsd xmm10, [rel epsilon]
-    ucomisd xmm10, [rel zero]
-    jg go_right
-    addsd xmm10, [rel epsilon]
-    addsd xmm10, [rel epsilon]
-    ucomisd xmm10, [rel zero]
-    jl go_left
+    ;t_x^2+t_y^2 - d^2
+    subsd xmm10, xmm11
+    comisd xmm10, [rel zero]
+    ja go_left
+    comisd xmm10, [rel zero]
+    jb go_right
+    
     jmp draw
+    
 
 go_right:
-    movsd xmm6, xmm8
+    movsd xmm7, xmm8
     jmp loop2
 go_left:
-    movsd xmm7, xmm8
+    movsd xmm6, xmm8
     jmp loop2
 
 
 draw:
-    addsd xmm4, xmm8
-    addsd xmm5, xmm9
-    cvtsi2sd xmm12, esi
-    ucomisd xmm5, xmm12
-    jl loop1
-
-end:
     mov rdi, coordinates
     mov eax, 2
-    movsd xmm0, xmm4
-    movsd xmm1, xmm5
-    ;addsd xmm0, xmm4
-    ;addsd xmm1, xmm5
+    movsd xmm0, xmm8
+    movsd xmm1, xmm9
     call printf
     mov rdi, [rbp - 8]
     mov esi, [rbp - 12]
@@ -149,8 +139,19 @@ end:
     movsd xmm2, [rbp - 40]
     movsd xmm3, [rbp - 48]
     mov eax, 4
+    jmp end
 
+    mov rbx, 15
+    movsd xmm4, xmm8
+    movsd xmm5, xmm9
+    cvtsi2sd xmm12, esi
+    ucomisd xmm5, xmm12
+    jb loop1
 
+    
+
+end:
+    
 
     mov ecx, edx
     mov edx, esi
@@ -168,6 +169,7 @@ end:
 
     section .data 
 epsilon: dq 0.1
+neg_epsilon: dq -0.1
 negative: dq -1.0
 zero: dq 0.0
 two: dq 2.0
