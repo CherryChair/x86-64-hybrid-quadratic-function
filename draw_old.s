@@ -7,7 +7,7 @@ drawQuadratic:
     push rbp
     mov rbp, rsp
 
-    sub rsp, 48
+    sub rsp, 88
     mov [rbp - 8], rdi      ;pixelBuffer
     mov [rbp - 12], esi     ;width
     mov [rbp - 16], edx     ;height
@@ -15,26 +15,14 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
+    ;X_C x_s, y_s, x_e, y_e
    
-
-    mov ecx, edx
-    mov edx, esi
-    mov rsi, rdi
-    mov rdi, parameters
-    call printf
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 12]
-    mov edx , [rbp - 16]
-    movsd xmm0, [rbp - 24]
-    movsd xmm1, [rbp - 32]
-    movsd xmm2, [rbp - 40]
-    movsd xmm3, [rbp - 48]  
-
     ;x = -b/2a
     movsd xmm4, xmm1
     divsd xmm4, xmm0
     divsd xmm4, [rel two]
     mulsd xmm4, [rel negative]
+    movsd [rbp - 56], xmm4  ;X_C
 
     ;y = ax^2+bx+c
     movsd xmm5, xmm4
@@ -43,40 +31,14 @@ drawQuadratic:
     mulsd xmm5, xmm4
     addsd xmm5, xmm2
 
-    
-
 b_4_loop:
+
     
-
-    ;__print_coordinates
-    sub rsp, 16
-    movsd [rbp - 56], xmm4
-    movsd [rbp - 64], xmm5
-
-    mov rdi, coordinates
-    mov eax, 2
-    movsd xmm0, xmm4
-    movsd xmm1, xmm5
-    call printf
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 12]
-    mov edx, [rbp - 16]
-    movsd xmm0, [rbp - 24]
-    movsd xmm1, [rbp - 32]
-    movsd xmm2, [rbp - 40]
-    movsd xmm3, [rbp - 48]
-    movsd xmm4, [rbp - 56] 
-    movsd xmm5, [rbp - 64]
-    add rsp, 16
-    mov eax, 4
-
 
     ;x_l = x, x_r = x+d
     movsd xmm6, xmm4
     movsd xmm7, xmm4
     addsd xmm7, xmm3
-
-    
 
 loop1:
     ;x_c = (x_l+x_r)/2
@@ -129,6 +91,7 @@ right:
 
 
 found:
+    
 
     ;xmm6 = x_t, xmm7 = y_t
     ;xmm4 = x, xmm5 = y
@@ -144,10 +107,8 @@ found:
     mulsd xmm9, [rel scale]
 
     ;convert to int
-    cvtsd2si r8, xmm8
-    cvtsd2si r9, xmm9
-
-    
+    cvtsd2si r8, xmm4
+    cvtsd2si r9, xmm5
 
     movsd xmm10, xmm6
     movsd xmm11, xmm7
@@ -158,7 +119,7 @@ found:
 
     cvtsd2si r10, xmm10
     cvtsd2si r11, xmm11
-
+    
 
     mov r12, rsi
     mov r13, rdx
@@ -173,25 +134,90 @@ found:
     cmp r11, 0
     jg y_pos
     neg r11
-    cmp r11, r13
-    jg end
-    neg r11
-    jmp draw
 y_pos:
     cmp r11, r13
     jg end
 
 
 draw:
+    
     add r8, r12
     add r9, r13
     add r10, r12
     add r11, r13
+    mov [rbp - 64], r8  ;x_s
+    mov [rbp - 72], r9  ;y_s
+    mov [rbp - 80], r10 ;x_e
+    mov [rbp - 88], r11 ;y_e
+;__________________________________________________________________________________
+    ;draw line between (r8, r9) and (r10, r11)
+;draw_line:
+	ucomisd xmm0, [rel zero]
+    jb a_negative
+
+a_positive:
+    ;first possbile movement vector
+    mov r8, 1
+    mov r9, 1
+
+    movsd xmm8, xmm6
+    subsd xmm8, xmm4
+    movsd xmm9, xmm7
+    subsd xmm9, xmm5
+    ucomisd xmm8, xmm9
+    ja right_vector
+    ;second possbile movement vector
+    mov r10, 0
+    mov r11, 1
+    jmp find_line
+a_negative:
+    ;first possbile movement vector
+    mov r8, 1
+    mov r9, -1
+
+    movsd xmm8, xmm6
+    subsd xmm8, xmm4
+    movsd xmm9, xmm5
+    subsd xmm9, xmm7
+    ucomisd xmm8, xmm9
+    ja right_vector
+    ;second possbile movement vector
+    mov r10, 0
+    mov r11, -1
+    jmp find_line
+
+right_vector:
+    mov r10, 1
+    mov r11, 0
+
+find_line:
+    
+
+    ;a of the line (y_s-y_e)
+    mov r12, [rbp - 72]
+    mov r13, [rbp - 88]
+    sub r12, [rbp - 88]
+    ;b of the line (x_e-x_s)
+	mov r14, [rbp - 64]
+    mov r13, [rbp - 80]
+    sub r13, [rbp - 64]
+
+    ;c of the line   
+	mov r14, [rbp - 80]
+    imul r14, [rbp - 72]
+    mov r15, [rbp - 64]
+    imul r15, [rbp - 88]
+    sub r14, r15    ;c
+
+;loop_line:
+
 color:
     
     
     ;height
-    mov r15, r9
+    mov r15, 0
+    mov r15d, [rbp- 16]
+    sub r15, [rbp - 88]
     ;width
     mov eax, [rbp - 12]
     ;width/8
@@ -199,7 +225,7 @@ color:
     ;offset to our desired line of file in byte array
     imul r15, rax
     ;line byte position
-    mov rax, r8
+    mov rax, [rbp - 80]
     sar rax, 3
     ;byte offset
     add r15, rax
@@ -207,28 +233,28 @@ color:
     ;desired bit
     mov rdx, rax
     sal rdx, 3
-    sub r8, rdx
+    sub rdx, [rbp - 64]
     ;get desired byte
     add r15, [rbp - 8]
 
     mov al, [r15]
 
     
-    cmp r8, 0
+    cmp rdx, 0
     je case_0
-    cmp r8, 1
+    cmp rdx, 1
     je case_1
-    cmp r8, 2
+    cmp rdx, 2
     je case_2
-    cmp r8, 3
+    cmp rdx, 3
     je case_3
-    cmp r8, 4
+    cmp rdx, 4
     je case_4
-    cmp r8, 5
+    cmp rdx, 5
     je case_5
-    cmp r8, 6
+    cmp rdx, 6
     je case_6
-    cmp r8, 7
+    cmp rdx, 7
     je case_7
 case_0:
     and al, 0x7F
@@ -263,20 +289,13 @@ colored:
     
     jmp b_4_loop
 
-    ;__print_coordinates
-    sub rsp, 48
-    movsd [rbp - 56], xmm4
-    movsd [rbp - 64], xmm5
-    movsd [rbp - 72], xmm6
-    movsd [rbp - 80], xmm7
-    mov [rbp - 88], r8
-    mov [rbp - 96], r9
+end:
 
-    mov rdi, pixels
-    mov eax, 0
-    mov rsi, r8
-    mov rdx, r9
-    call printf
+    mov rdi, coordinates
+    mov eax, 2
+    movsd xmm0, xmm4
+    movsd xmm1, xmm5
+    ;call printf
     mov rdi, [rbp - 8]
     mov esi, [rbp - 12]
     mov edx, [rbp - 16]
@@ -284,30 +303,19 @@ colored:
     movsd xmm1, [rbp - 32]
     movsd xmm2, [rbp - 40]
     movsd xmm3, [rbp - 48]
-    movsd xmm4, [rbp - 56] 
-    movsd xmm5, [rbp - 64]
-    movsd xmm6, [rbp - 72]
-    movsd xmm7, [rbp - 80]
-    mov r8, [rbp - 88]
-    mov r9, [rbp - 96]
-    add rsp, 48
+    mov r8, [rbp - 64]
+    mov r9, [rbp - 72]
+    mov r10, [rbp - 80]
+    mov r11, [rbp - 88]
     mov eax, 4
 
-    ;draw line between (r8, r9) and (r10, r11)
-    
-    movsd xmm4, xmm6
-    movsd xmm5, xmm7
-
-    
-    jmp b_4_loop
-
-end:
-    
-
-    
 
 
-    
+    mov ecx, edx
+    mov edx, esi
+    mov rsi, rdi
+    mov rdi, parameters
+    ;call printf
     
 
     mov rsp, rbp
@@ -323,7 +331,7 @@ negative: dq -1.0
 zero: dq 0.0
 two: dq 2.0
 four: dq 4.0
-parameters: db `\naddr: %i width: %i height: %i a: %.1f b: %.1f c: %.1f S: %.1f\n`,0
+parameters: db `addr: %i width: %i height: %i a: %g b: %g c: %g S: %g\n`,0
 scale: dq 10.0
-coordinates: db `(%.5f, %.5f)\n`,0
-pixels: db `Pixels: (%i, %i)\n`,0
+coordinates: db `x: %f y: %f\n`,0
+message: db "Hello world", 10
