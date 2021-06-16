@@ -199,9 +199,9 @@ find_line:
 
     ;c of the line   
 	mov r14, [rbp - 80]
-    mul r14, [rbp - 72]
+    imul r14, [rbp - 72]
     mov r15, [rbp - 64]
-    mul r15, [rbp - 88]
+    imul r15, [rbp - 88]
     sub r14, r15    ;c
 
 loop_line:
@@ -215,9 +215,9 @@ color:
     ;width/8
     sar rax, 3
     ;offset to our desired line of file in byte array
-    mul r15, rax
+    imul r15, rax
     ;line byte position
-    move rax, [rbp - 64]
+    mov rax, [rbp - 64]
     sar rax, 3
     ;byte offset
     add r15, rax
