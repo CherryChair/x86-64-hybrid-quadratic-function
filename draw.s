@@ -151,66 +151,6 @@ draw:
     mov [rbp - 88], r11 ;y_e
 ;__________________________________________________________________________________
     ;draw line between (r8, r9) and (r10, r11)
-;draw_line:
-	ucomisd xmm0, [rel zero]
-    jb a_negative
-
-a_positive:
-    ;first possbile movement vector
-    mov r8, 1
-    mov r9, 1
-
-    movsd xmm8, xmm6
-    subsd xmm8, xmm4
-    movsd xmm9, xmm7
-    subsd xmm9, xmm5
-    ucomisd xmm8, xmm9
-    ja right_vector
-    ;second possbile movement vector
-    mov r10, 0
-    mov r11, 1
-    jmp find_line
-a_negative:
-    ;first possbile movement vector
-    mov r8, 1
-    mov r9, -1
-
-    movsd xmm8, xmm6
-    subsd xmm8, xmm4
-    movsd xmm9, xmm5
-    subsd xmm9, xmm7
-    ucomisd xmm8, xmm9
-    ja right_vector
-    ;second possbile movement vector
-    mov r10, 0
-    mov r11, -1
-    jmp find_line
-
-right_vector:
-    mov r10, 1
-    mov r11, 0
-
-find_line:
-    
-
-    ;a of the line (y_s-y_e)
-    mov r12, [rbp - 72]
-    mov r13, [rbp - 88]
-    sub r12, [rbp - 88]
-    ;b of the line (x_e-x_s)
-	mov r14, [rbp - 64]
-    mov r13, [rbp - 80]
-    sub r13, [rbp - 64]
-
-    ;c of the line   
-	mov r14, [rbp - 80]
-    imul r14, [rbp - 72]
-    mov r15, [rbp - 64]
-    imul r15, [rbp - 88]
-    sub r14, r15    ;c
-
-;loop_line:
-
 color:
     
     
