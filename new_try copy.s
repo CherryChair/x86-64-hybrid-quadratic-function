@@ -7,7 +7,7 @@ drawQuadratic:
     push rbp
     mov rbp, rsp
 
-    sub rsp, 88
+    sub rsp, 48
     mov [rbp - 8], rdi      ;pixelBuffer
     mov [rbp - 12], esi     ;width
     mov [rbp - 16], edx     ;height
@@ -15,7 +15,6 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
-    ;X_C x_s, y_s, x_e, y_e
     mov r14, 100
    
     ;x = -b/2a
@@ -23,7 +22,6 @@ drawQuadratic:
     divsd xmm4, xmm0
     divsd xmm4, [rel two]
     mulsd xmm4, [rel negative]
-    movsd [rbp - 56], xmm4  ;X_C
 
     ;y = ax^2+bx+c
     movsd xmm5, xmm4
@@ -141,141 +139,9 @@ draw:
     add r9, r13
     add r10, r12
     add r11, r13
-    mov [rbp - 64], r8  ;x_s
-    mov [rbp - 72], r9  ;y_s
-    mov [rbp - 80], r10 ;x_e
-    mov [rbp - 88], r11 ;y_e
-;__________________________________________________________________________________
+
     ;draw line between (r8, r9) and (r10, r11)
-draw_line:
-	ucomisd xmm0, [rel zero]
-    jb a_negative
-
-a_positive:
-    ;first possbile movement vector
-    mov r8, 1
-    mov r9, 1
-
-    movsd xmm8, xmm6
-    subsd xmm8, xmm4
-    movsd xmm9, xmm7
-    movsd xmm9, xmm5
-    ucomisd xmm8, xmm9
-    ja right_vector
-    ;second possbile movement vector
-    mov r10, 0
-    mov r11, 1
-    jmp find_line
-a_negative:
-    ;first possbile movement vector
-    mov r8, 1
-    mov r9, -1
-
-    movsd xmm8, xmm6
-    subsd xmm8, xmm4
-    movsd xmm9, xmm5
-    movsd xmm9, xmm7
-    ucomisd xmm8, xmm9
-    ja right_vector
-    ;second possbile movement vector
-    mov r10, 0
-    mov r11, -1
-    jmp find_line
-
-right_vector:
-    mov r10, 1
-    mov r11, 0
-
-find_line:
-
-    ;a of the line (y_s-y_e)
-    mov r12, [rbp - 72]
-    ;mov r13, [rbp - 88]
-    sub r12, [rbp - 88]
-    ;b of the line (x_e-x_s)
-	;mov r14, [rbp - 64]
-    mov r13, [rbp - 80]
-    sub r13, [rbp - 64]
-
-    ;c of the line   
-	mov r14, [rbp - 80]
-    mul r14, [rbp - 72]
-    mov r15, [rbp - 64]
-    mul r15, [rbp - 88]
-    sub r14, r15    ;c
-
-loop_line:
-
-color:
-    ;height
-    mov r15d, [rbp- 16]
-    sub r15, [rbp - 72]
-    ;width
-    mov eax, [rbp - 12]
-    ;width/8
-    sar rax, 3
-    ;offset to our desired line of file in byte array
-    mul r15, rax
-    ;line byte position
-    move rax, [rbp - 64]
-    sar rax, 3
-    ;byte offset
-    add r15, rax
-    add r15, 62
-    ;desired bit
-    mov rdx, rax
-    sal rdx, 3
-    sub rdx, [rbp - 64]
-    ;get desired byte
-    mov rdi, [rbp - 8]
-    add rdi, r15
-
-    mov al, [rdi]
-
     
-    cmp rdx, 0
-    je case_0
-    cmp rdx, 1
-    je case_1
-    cmp rdx, 2
-    je case_2
-    cmp rdx, 3
-    je case_3
-    cmp rdx, 4
-    je case_4
-    cmp rdx, 5
-    je case_5
-    cmp rdx, 6
-    je case_6
-    cmp rdx, 7
-    je case_7
-case_0:
-    and al, 0x7F
-    jmp colored
-case_1:
-    and al, 0xBF
-    jmp colored
-case_2:
-    and al, 0xDF
-    jmp colored
-case_3:
-    and al, 0xEF
-    jmp colored
-case_4:
-    and al, 0xF7
-    jmp colored
-case_5:
-    and al, 0xFB
-    jmp colored
-case_6:
-    and al, 0xFD
-    jmp colored
-case_7:
-    and al, 0xFE
-colored:
-    mov [rdi], al
-    
-;__________________________________________________________________________________
     movsd xmm4, xmm6
     movsd xmm5, xmm7
     dec r14
