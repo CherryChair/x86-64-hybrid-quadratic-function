@@ -144,8 +144,8 @@ found:
     mulsd xmm9, [rel scale]
 
     ;convert to int
-    cvtsd2si r8, xmm4
-    cvtsd2si r9, xmm5
+    cvtsd2si r8, xmm8
+    cvtsd2si r9, xmm9
 
     
 
@@ -173,6 +173,10 @@ found:
     cmp r11, 0
     jg y_pos
     neg r11
+    cmp r11, r13
+    jg end
+    neg r11
+    jmp draw
 y_pos:
     cmp r11, r13
     jg end
@@ -183,6 +187,82 @@ draw:
     add r9, r13
     add r10, r12
     add r11, r13
+color:
+    
+    
+    ;height
+    mov r15, r9
+    ;width
+    mov eax, [rbp - 12]
+    ;width/8
+    sar rax, 3
+    ;offset to our desired line of file in byte array
+    imul r15, rax
+    ;line byte position
+    mov rax, r8
+    sar rax, 3
+    ;byte offset
+    add r15, rax
+    add r15, 62
+    ;desired bit
+    mov rdx, rax
+    sal rdx, 3
+    sub r8, rdx
+    ;get desired byte
+    add r15, [rbp - 8]
+
+    mov al, [r15]
+
+    
+    cmp r8, 0
+    je case_0
+    cmp r8, 1
+    je case_1
+    cmp r8, 2
+    je case_2
+    cmp r8, 3
+    je case_3
+    cmp r8, 4
+    je case_4
+    cmp r8, 5
+    je case_5
+    cmp r8, 6
+    je case_6
+    cmp r8, 7
+    je case_7
+case_0:
+    and al, 0x7F
+    jmp colored
+case_1:
+    and al, 0xBF
+    jmp colored
+case_2:
+    and al, 0xDF
+    jmp colored
+case_3:
+    and al, 0xEF
+    jmp colored
+case_4:
+    and al, 0xF7
+    jmp colored
+case_5:
+    and al, 0xFB
+    jmp colored
+case_6:
+    and al, 0xFD
+    jmp colored
+case_7:
+    and al, 0xFE
+colored:
+    mov [r15], al
+    
+;__________________________________________________________________________________
+    movsd xmm4, xmm6
+    movsd xmm5, xmm7
+
+    
+    jmp b_4_loop
+
     ;__print_coordinates
     sub rsp, 48
     movsd [rbp - 56], xmm4
@@ -194,8 +274,8 @@ draw:
 
     mov rdi, pixels
     mov eax, 0
-    mov rsi, r10
-    mov rdx, r11
+    mov rsi, r8
+    mov rdx, r9
     call printf
     mov rdi, [rbp - 8]
     mov esi, [rbp - 12]
