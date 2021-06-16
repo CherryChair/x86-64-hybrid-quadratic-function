@@ -15,7 +15,7 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
-    mov r14, 60
+    mov r14, 100
    
     ;x = -b/2a
     movsd xmm4, xmm1
@@ -88,20 +88,70 @@ right:
 
 found:
 
-    ;xmm8 = x_t, xmm9 = y_t
+    ;xmm6 = x_t, xmm7 = y_t
     ;xmm4 = x, xmm5 = y
+    movsd xmm6, xmm8
+    movsd xmm7, xmm9
 
-    ;draw
-    movsd xmm4, xmm8
-    movsd xmm5, xmm9
+
+    movsd xmm8, xmm4
+    movsd xmm9, xmm5
+
+    ;scale our coordinates
+    mulsd xmm8, [rel scale]
+    mulsd xmm9, [rel scale]
+
+    ;convert to int
+    cvtsd2si r8, xmm4
+    cvtsd2si r9, xmm5
+
+    movsd xmm10, xmm6
+    movsd xmm11, xmm7
+
+    ;scale our coordinates
+    mulsd xmm10, [rel scale]
+    mulsd xmm11, [rel scale]
+
+    cvtsd2si r10, xmm10
+    cvtsd2si r11, xmm11
+
+
+    mov r12, rsi
+    mov r13, rdx
+
+    ;size of quadrants
+    sar r12, 1
+    sar r13, 1
+
+    cmp r10, r12
+    jg end
+    
+    cmp r11, 0
+    jg y_pos
+    neg r11
+y_pos:
+    cmp r11, r13
+    jg end
+
+
+draw:
+    add r8, r12
+    add r9, r13
+    add r10, r12
+    add r11, r13
+
+    ;draw line between (r8, r9) and (r10, r11)
+    
+    movsd xmm4, xmm6
+    movsd xmm5, xmm7
     dec r14
     jnz b_4_loop
 
-
+end:
     mov rdi, coordinates
     mov eax, 2
-    movsd xmm0, xmm8
-    movsd xmm1, xmm9
+    movsd xmm0, xmm4
+    movsd xmm1, xmm5
     call printf
     mov rdi, [rbp - 8]
     mov esi, [rbp - 12]
@@ -111,10 +161,9 @@ found:
     movsd xmm2, [rbp - 40]
     movsd xmm3, [rbp - 48]
     mov eax, 4
-    jmp end
 
 
-end:
+
     mov ecx, edx
     mov edx, esi
     mov rsi, rdi
@@ -136,4 +185,5 @@ zero: dq 0.0
 two: dq 2.0
 four: dq 4.0
 parameters: db `addr: %i width: %i height: %i a: %g b: %g c: %g S: %g\n`,0
+scale: dq 10.0
 coordinates: db `x: %g y: %g\n`,0
