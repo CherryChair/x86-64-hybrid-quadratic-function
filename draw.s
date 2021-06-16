@@ -16,7 +16,7 @@ drawQuadratic:
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
     ;X_C x_s, y_s, x_e, y_e
-    mov r14, 100
+    mov rcx, 100
    
     ;x = -b/2a
     movsd xmm4, xmm1
@@ -147,7 +147,7 @@ draw:
     mov [rbp - 88], r11 ;y_e
 ;__________________________________________________________________________________
     ;draw line between (r8, r9) and (r10, r11)
-draw_line:
+;draw_line:
 	ucomisd xmm0, [rel zero]
     jb a_negative
 
@@ -190,10 +190,10 @@ find_line:
 
     ;a of the line (y_s-y_e)
     mov r12, [rbp - 72]
-    ;mov r13, [rbp - 88]
+    mov r13, [rbp - 88]
     sub r12, [rbp - 88]
     ;b of the line (x_e-x_s)
-	;mov r14, [rbp - 64]
+	mov r14, [rbp - 64]
     mov r13, [rbp - 80]
     sub r13, [rbp - 64]
 
@@ -204,7 +204,7 @@ find_line:
     imul r15, [rbp - 88]
     sub r14, r15    ;c
 
-loop_line:
+;loop_line:
 
 color:
     ;height
@@ -227,10 +227,9 @@ color:
     sal rdx, 3
     sub rdx, [rbp - 64]
     ;get desired byte
-    mov rdi, [rbp - 8]
-    add rdi, r15
+    add r15, [rbp - 8]
 
-    mov al, [rdi]
+    mov al, [r15]
 
     
     cmp rdx, 0
@@ -273,12 +272,12 @@ case_6:
 case_7:
     and al, 0xFE
 colored:
-    mov [rdi], al
+    mov [r15], al
     
 ;__________________________________________________________________________________
     movsd xmm4, xmm6
     movsd xmm5, xmm7
-    dec r14
+    dec rcx
     jnz b_4_loop
 
 end:
@@ -286,7 +285,7 @@ end:
     mov eax, 2
     movsd xmm0, xmm4
     movsd xmm1, xmm5
-    call printf
+    ;call printf
     mov rdi, [rbp - 8]
     mov esi, [rbp - 12]
     mov edx, [rbp - 16]
@@ -302,7 +301,7 @@ end:
     mov edx, esi
     mov rsi, rdi
     mov rdi, parameters
-    call printf
+    ;call printf
     
 
     mov rsp, rbp

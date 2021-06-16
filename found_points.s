@@ -15,8 +15,21 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
-    mov r14, 100
    
+
+    mov ecx, edx
+    mov edx, esi
+    mov rsi, rdi
+    mov rdi, parameters
+    call printf
+    mov rdi, [rbp - 8]
+    mov esi, [rbp - 12]
+    mov edx , [rbp - 16]
+    movsd xmm0, [rbp - 24]
+    movsd xmm1, [rbp - 32]
+    movsd xmm2, [rbp - 40]
+    movsd xmm3, [rbp - 48]  
+
     ;x = -b/2a
     movsd xmm4, xmm1
     divsd xmm4, xmm0
@@ -30,11 +43,40 @@ drawQuadratic:
     mulsd xmm5, xmm4
     addsd xmm5, xmm2
 
+    
+
 b_4_loop:
+    
+
+    ;__print_coordinates
+    sub rsp, 16
+    movsd [rbp - 56], xmm4
+    movsd [rbp - 64], xmm5
+
+    mov rdi, coordinates
+    mov eax, 2
+    movsd xmm0, xmm4
+    movsd xmm1, xmm5
+    call printf
+    mov rdi, [rbp - 8]
+    mov esi, [rbp - 12]
+    mov edx, [rbp - 16]
+    movsd xmm0, [rbp - 24]
+    movsd xmm1, [rbp - 32]
+    movsd xmm2, [rbp - 40]
+    movsd xmm3, [rbp - 48]
+    movsd xmm4, [rbp - 56] 
+    movsd xmm5, [rbp - 64]
+    add rsp, 16
+    mov eax, 4
+
+
     ;x_l = x, x_r = x+d
     movsd xmm6, xmm4
     movsd xmm7, xmm4
     addsd xmm7, xmm3
+
+    
 
 loop1:
     ;x_c = (x_l+x_r)/2
@@ -144,31 +186,17 @@ draw:
     
     movsd xmm4, xmm6
     movsd xmm5, xmm7
-    dec r14
-    jnz b_4_loop
+
+    
+    jmp b_4_loop
 
 end:
-    mov rdi, coordinates
-    mov eax, 2
-    movsd xmm0, xmm4
-    movsd xmm1, xmm5
-    call printf
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 12]
-    mov edx, [rbp - 16]
-    movsd xmm0, [rbp - 24]
-    movsd xmm1, [rbp - 32]
-    movsd xmm2, [rbp - 40]
-    movsd xmm3, [rbp - 48]
-    mov eax, 4
+    
+
+    
 
 
-
-    mov ecx, edx
-    mov edx, esi
-    mov rsi, rdi
-    mov rdi, parameters
-    call printf
+    
     
 
     mov rsp, rbp
@@ -184,6 +212,6 @@ negative: dq -1.0
 zero: dq 0.0
 two: dq 2.0
 four: dq 4.0
-parameters: db `addr: %i width: %i height: %i a: %g b: %g c: %g S: %g\n`,0
+parameters: db `\naddr: %i width: %i height: %i a: %.1f b: %.1f c: %.1f S: %.1f\n`,0
 scale: dq 10.0
-coordinates: db `x: %g y: %g\n`,0
+coordinates: db `(%.5f, %.5f)\n`,0
