@@ -147,6 +147,8 @@ found:
     cvtsd2si r8, xmm4
     cvtsd2si r9, xmm5
 
+    
+
     movsd xmm10, xmm6
     movsd xmm11, xmm7
 
@@ -181,6 +183,35 @@ draw:
     add r9, r13
     add r10, r12
     add r11, r13
+    ;__print_coordinates
+    sub rsp, 48
+    movsd [rbp - 56], xmm4
+    movsd [rbp - 64], xmm5
+    movsd [rbp - 72], xmm6
+    movsd [rbp - 80], xmm7
+    mov [rbp - 88], r8
+    mov [rbp - 96], r9
+
+    mov rdi, pixels
+    mov eax, 0
+    mov rsi, r10
+    mov rdx, r11
+    call printf
+    mov rdi, [rbp - 8]
+    mov esi, [rbp - 12]
+    mov edx, [rbp - 16]
+    movsd xmm0, [rbp - 24]
+    movsd xmm1, [rbp - 32]
+    movsd xmm2, [rbp - 40]
+    movsd xmm3, [rbp - 48]
+    movsd xmm4, [rbp - 56] 
+    movsd xmm5, [rbp - 64]
+    movsd xmm6, [rbp - 72]
+    movsd xmm7, [rbp - 80]
+    mov r8, [rbp - 88]
+    mov r9, [rbp - 96]
+    add rsp, 48
+    mov eax, 4
 
     ;draw line between (r8, r9) and (r10, r11)
     
@@ -215,3 +246,4 @@ four: dq 4.0
 parameters: db `\naddr: %i width: %i height: %i a: %.1f b: %.1f c: %.1f S: %.1f\n`,0
 scale: dq 10.0
 coordinates: db `(%.5f, %.5f)\n`,0
+pixels: db `Pixels: (%i, %i)\n`,0

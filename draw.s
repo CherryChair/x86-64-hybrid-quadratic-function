@@ -16,7 +16,6 @@ drawQuadratic:
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
     ;X_C x_s, y_s, x_e, y_e
-    mov rcx, 100
    
     ;x = -b/2a
     movsd xmm4, xmm1
@@ -33,6 +32,9 @@ drawQuadratic:
     addsd xmm5, xmm2
 
 b_4_loop:
+
+    
+
     ;x_l = x, x_r = x+d
     movsd xmm6, xmm4
     movsd xmm7, xmm4
@@ -89,6 +91,7 @@ right:
 
 
 found:
+    
 
     ;xmm6 = x_t, xmm7 = y_t
     ;xmm4 = x, xmm5 = y
@@ -116,7 +119,7 @@ found:
 
     cvtsd2si r10, xmm10
     cvtsd2si r11, xmm11
-
+    
 
     mov r12, rsi
     mov r13, rdx
@@ -137,6 +140,7 @@ y_pos:
 
 
 draw:
+    
     add r8, r12
     add r9, r13
     add r10, r12
@@ -159,7 +163,7 @@ a_positive:
     movsd xmm8, xmm6
     subsd xmm8, xmm4
     movsd xmm9, xmm7
-    movsd xmm9, xmm5
+    subsd xmm9, xmm5
     ucomisd xmm8, xmm9
     ja right_vector
     ;second possbile movement vector
@@ -174,7 +178,7 @@ a_negative:
     movsd xmm8, xmm6
     subsd xmm8, xmm4
     movsd xmm9, xmm5
-    movsd xmm9, xmm7
+    subsd xmm9, xmm7
     ucomisd xmm8, xmm9
     ja right_vector
     ;second possbile movement vector
@@ -187,6 +191,7 @@ right_vector:
     mov r11, 0
 
 find_line:
+    
 
     ;a of the line (y_s-y_e)
     mov r12, [rbp - 72]
@@ -207,9 +212,12 @@ find_line:
 ;loop_line:
 
 color:
+    
+    
     ;height
+    mov r15, 0
     mov r15d, [rbp- 16]
-    sub r15, [rbp - 72]
+    sub r15, [rbp - 88]
     ;width
     mov eax, [rbp - 12]
     ;width/8
@@ -217,7 +225,7 @@ color:
     ;offset to our desired line of file in byte array
     imul r15, rax
     ;line byte position
-    mov rax, [rbp - 64]
+    mov rax, [rbp - 80]
     sar rax, 3
     ;byte offset
     add r15, rax
@@ -277,10 +285,12 @@ colored:
 ;__________________________________________________________________________________
     movsd xmm4, xmm6
     movsd xmm5, xmm7
-    dec rcx
-    jnz b_4_loop
+
+    
+    jmp b_4_loop
 
 end:
+
     mov rdi, coordinates
     mov eax, 2
     movsd xmm0, xmm4
@@ -293,6 +303,10 @@ end:
     movsd xmm1, [rbp - 32]
     movsd xmm2, [rbp - 40]
     movsd xmm3, [rbp - 48]
+    mov r8, [rbp - 64]
+    mov r9, [rbp - 72]
+    mov r10, [rbp - 80]
+    mov r11, [rbp - 88]
     mov eax, 4
 
 
@@ -319,4 +333,5 @@ two: dq 2.0
 four: dq 4.0
 parameters: db `addr: %i width: %i height: %i a: %g b: %g c: %g S: %g\n`,0
 scale: dq 10.0
-coordinates: db `x: %g y: %g\n`,0
+coordinates: db `x: %f y: %f\n`,0
+message: db "Hello world", 10
