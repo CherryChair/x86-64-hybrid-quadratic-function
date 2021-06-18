@@ -15,20 +15,6 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
-   
-
-    mov ecx, edx
-    mov edx, esi
-    mov rsi, rdi
-    mov rdi, parameters
-    call printf
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 12]
-    mov edx , [rbp - 16]
-    movsd xmm0, [rbp - 24]
-    movsd xmm1, [rbp - 32]
-    movsd xmm2, [rbp - 40]
-    movsd xmm3, [rbp - 48]  
 
     ;x = -b/2a
     movsd xmm4, xmm1
@@ -46,30 +32,7 @@ drawQuadratic:
     
 
 b_4_loop:
-    
-
-    ;__print_coordinates
-    sub rsp, 16
-    movsd [rbp - 56], xmm4
-    movsd [rbp - 64], xmm5
-
-    mov rdi, coordinates
-    mov eax, 2
-    movsd xmm0, xmm4
-    movsd xmm1, xmm5
-    call printf
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 12]
-    mov edx, [rbp - 16]
-    movsd xmm0, [rbp - 24]
-    movsd xmm1, [rbp - 32]
-    movsd xmm2, [rbp - 40]
-    movsd xmm3, [rbp - 48]
-    movsd xmm4, [rbp - 56] 
-    movsd xmm5, [rbp - 64]
-    add rsp, 16
-    mov eax, 4
-
+    mov edx, [rbp - 16] ;potencjalnie do poprawy
 
     ;x_l = x, x_r = x+d
     movsd xmm6, xmm4
@@ -203,34 +166,108 @@ draw:
     add r11, r13
 
     sub rsp, 56
-    mov [rbp - 72], r8
-    mov [rbp - 80], r9
-    mov [rbp - 88], r10
-    mov [rbp - 96], r11
-    mov [rbp - 104], r12
-    mov [rbp - 112], r13
-    mov [rbp - 120], r14
+    mov [rbp - 72], r8      ;current x
+    mov [rbp - 80], r9      ;current y
+    mov [rbp - 88], r10     ;ending x
+    mov [rbp - 96], r11     ;ending y
+    mov [rbp - 104], r12    ;offset x
+    mov [rbp - 112], r13    ;offset y
+    mov [rbp - 120], r14    ;symmetrical
+
+
+line:
+    ucomisd xmm0, [rel zero]
+    jb a_negative
+
+a_positive:
+    ;first possbile movement vector
+    mov r8, 1
+    mov r9, 1
+
+    movsd xmm8, xmm6
+    subsd xmm8, xmm4
+    movsd xmm9, xmm7
+    subsd xmm9, xmm5
+    ucomisd xmm8, xmm9
+    ja right_vector
+    ;second possbile movement vector
+    mov r10, 0
+    mov r11, 1
+    jmp find_line
+a_negative:
+    ;first possbile movement vector
+    mov r8, 1
+    mov r9, -1
+
+    movsd xmm8, xmm6
+    subsd xmm8, xmm4
+    movsd xmm9, xmm5
+    subsd xmm9, xmm7
+    ucomisd xmm8, xmm9
+    ja right_vector
+    ;second possbile movement vector
+    mov r10, 0
+    mov r11, -1
+    jmp find_line
+
+right_vector:
+    mov r10, 1
+    mov r11, 0
+
+find_line:
+    
+
+    ;a of the line (y_s-y_e)
+    mov r12, [rbp - 80]
+    mov r13, [rbp - 96]
+    sub r12, [rbp - 96]
+    ;b of the line (x_e-x_s)
+	mov r14, [rbp - 72]
+    mov r13, [rbp - 88]
+    sub r13, [rbp - 72]
+
+    ;c of the line   
+	mov r15, [rbp - 88]
+    imul r15, [rbp - 80]
+    mov r14, [rbp - 72]
+    imul r14, [rbp - 96]
+    sub r14, r15    ;c
+
+    sub rsp, 56
+    mov [rbp - 128], r8     ;w1 x
+    mov [rbp - 136], r9     ;w1 y
+    mov [rbp - 144], r10    ;w2 x
+    mov [rbp - 152], r11    ;w2 y
+    mov [rbp - 160], r12    ;line a
+    mov [rbp - 168], r13    ;line b
+    mov [rbp - 176], r14    ;line c
 
 draw_loop:
 
     mov r8, [rbp - 72]
     mov r9, [rbp - 80]
     ;we find symmetrical x
-    mov r14, [rbp - 120] ;;;;;;;;;;;;;          needs a fix
-    sar r14, 1
-    sub r14, r8 
+    mov r10, [rbp - 120]
+    sal r10, 1
+    sub r10, r8 
+    ;we set up condition to paint symmetrical point
+    mov r11, 2
 
-    
-    mov r12, 2
-
-
-color:   
-    
+color:
     ;height
-    mov r15, r9
-    ;width
     mov rax, 0
     mov eax, [rbp - 12]
+    cmp rax, r9
+    jle switch_point
+    mov r15, r9
+    cmp r9, 0
+    jle switch_point
+    ;width
+    mov eax, [rbp - 12]
+    cmp rax, r8
+    jle switch_point
+    cmp r8, 0
+    jle switch_point
     ;width/8
     sar rax, 3
     ;offset to our desired line of file in byte array
@@ -247,9 +284,7 @@ color:
     sub r8, rdx
     ;get desired byte
     add r15, [rbp - 8]
-
     mov al, [r15]
-
     
     cmp r8, 0
     je case_0
@@ -292,70 +327,81 @@ case_7:
     and al, 0xFE
 colored:
     mov [r15], al
-    
-;__________________________________________________________________________________
-    
-    mov r8, r14
-    dec r12
-    cmp r12, 0
+
+switch_point:
+    mov r8, r10
+    dec r11
+    cmp r11, 0
     jnz color
     
+    ;we evaluate next possible 2 pixels
+    mov r10, [rbp - 72]
+    mov r11, [rbp - 80]
+    add r10, [rbp - 128]
+    add r11, [rbp - 136]
+    imul r10, [rbp - 160]
+    imul r11, [rbp - 168]
+    add r10, r11
+    add r10, [rbp - 176]
+
+    cmp r10, 0
+    jg second_pixel
+    neg r10
+
+second_pixel:
+    mov r11, [rbp - 72]
+    mov r12, [rbp - 80]
+    add r11, [rbp - 144]
+    add r12, [rbp - 152]
+    imul r11, [rbp - 160]
+    imul r12, [rbp - 168]
+    add r11, r12
+    add r11, [rbp - 176]
+
+    cmp r11, 0
+    jg compare
+    neg r11
+
+compare:
+    cmp r10, r11
+    jg second_closer
+
+first_closer:
+    mov r10, [rbp - 72]
+    mov r11, [rbp - 80]
+    add r10, [rbp - 128]
+    add r11, [rbp - 136]
+    jmp compare_to_next
+    
+second_closer:
+    mov r10, [rbp - 72]
+    mov r11, [rbp - 80]
+    add r10, [rbp - 144]
+    add r11, [rbp - 152]
+
+compare_to_next:
+    mov r8, [rbp - 72]
+    mov r9, [rbp - 80]
+    mov [rbp - 72], r10
+    mov [rbp - 80], r11
 
 
-sym_coloured:
-    add rsp, 56
+cmpr:
+    cmp r10, [rbp - 88]
+    jne draw_loop
+    cmp r11, [rbp - 96]
+    jne draw_loop
+
+
+finish_line:
+    add rsp, 112
     
     movsd xmm4, xmm6
     movsd xmm5, xmm7
 
-    
-    jmp b_4_loop
-
-    ;__print_coordinates
-    sub rsp, 48
-    movsd [rbp - 56], xmm4
-    movsd [rbp - 64], xmm5
-    movsd [rbp - 72], xmm6
-    movsd [rbp - 80], xmm7
-    mov [rbp - 88], r8
-    mov [rbp - 96], r9
-
-    mov rdi, pixels
-    mov eax, 0
-    mov rsi, r8
-    mov rdx, r9
-    call printf
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 12]
-    mov edx, [rbp - 16]
-    movsd xmm0, [rbp - 24]
-    movsd xmm1, [rbp - 32]
-    movsd xmm2, [rbp - 40]
-    movsd xmm3, [rbp - 48]
-    movsd xmm4, [rbp - 56] 
-    movsd xmm5, [rbp - 64]
-    movsd xmm6, [rbp - 72]
-    movsd xmm7, [rbp - 80]
-    mov r8, [rbp - 88]
-    mov r9, [rbp - 96]
-    add rsp, 48
-    mov eax, 4
-
-    ;draw line between (r8, r9) and (r10, r11)
-    
-    movsd xmm4, xmm6
-    movsd xmm5, xmm7
-
-    
     jmp b_4_loop
 
 end:
-    
-
-    
-
-
-    
     
 
     mov rsp, rbp

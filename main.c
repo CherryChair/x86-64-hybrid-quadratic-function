@@ -91,6 +91,8 @@ int main()
                 {
                 case A:
                     a += 0.1;
+                    if (a > -0.05 && a < 0.05)
+                        a += 0.1;
                     break;
                 case B:
                     b += 0.1;
@@ -110,6 +112,8 @@ int main()
                 {
                 case A:
                     a -= 0.1;
+                    if (a > -0.05 && a < 0.05)
+                        a -= 0.1;
                     break;
                 case B:
                     b -= 0.1;
