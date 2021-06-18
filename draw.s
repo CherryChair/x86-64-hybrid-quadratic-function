@@ -129,19 +129,7 @@ found:
     sar r12, 1
     sar r13, 1
 
-    cmp r10, r12
-    jg end
-    
-    cmp r11, 0
-    jg y_pos
-    neg r11
-    cmp r11, r13
-    jg end
-    neg r11
-    jmp draw
-y_pos:
-    cmp r11, r13
-    jg end
+
 
 draw:
 
@@ -395,10 +383,37 @@ cmpr:
 
 
 finish_line:
-    add rsp, 112
+    
     
     movsd xmm4, xmm6
     movsd xmm5, xmm7
+
+    mov r10, [rbp - 88]
+    mov r11, [rbp - 96]
+
+    mov r12, 0
+    mov r13, 0
+    mov r12d, [rbp - 12]
+    mov r13d, [rbp - 16]
+
+    add rsp, 112
+b4_comp:
+    cmp r10, r12
+    jg end
+    cmp r10, 0
+    jl end
+    
+    cmp r11, 0
+    jg y_pos
+    neg r11
+    cmp r11, r13
+    jg end
+    neg r11
+    jmp b_4_loop
+y_pos:
+    cmp r11, r13
+    jg end
+
 
     jmp b_4_loop
 
