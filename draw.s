@@ -1,6 +1,5 @@
     section .text
 
-extern printf
 global drawQuadratic
 
 drawQuadratic:
@@ -254,16 +253,18 @@ draw_loop:
     mov r11, 2
 
 color:
-    ;height
+    ;we check whether height is not oob
     mov rax, 0
     mov eax, [rbp - 12]
     cmp rax, r9
     jle switch_point
-    mov r15, r9
     cmp r9, 0
     jle switch_point
+    ;height
+    mov r15, r9
     ;width
     mov eax, [rbp - 12]
+    ;we check whether width is not oob
     cmp rax, r8
     jle switch_point
     cmp r8, 0
@@ -407,9 +408,6 @@ end:
     mov rsp, rbp
     pop rbp
     ret
-
-
-
 
     section .data 
 epsilon: dq 0.001
