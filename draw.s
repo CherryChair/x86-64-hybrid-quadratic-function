@@ -181,18 +181,55 @@ y_pos:
     cmp r11, r13
     jg end
 
-
 draw:
+
+    
+    ;we count -b/2a
+    movsd xmm12, xmm1
+    divsd xmm12, xmm0
+    divsd xmm12, [rel two]
+    mulsd xmm12, [rel negative]
+
+    ;we scale it and convert it
+    mulsd xmm12, [rel scale]
+    cvtsd2si r14, xmm12
+
+    ;we move it to proper place
+    add r14, r12
+
     add r8, r12
     add r9, r13
     add r10, r12
     add r11, r13
-color:
+
+    sub rsp, 56
+    mov [rbp - 72], r8
+    mov [rbp - 80], r9
+    mov [rbp - 88], r10
+    mov [rbp - 96], r11
+    mov [rbp - 104], r12
+    mov [rbp - 112], r13
+    mov [rbp - 120], r14
+
+draw_loop:
+
+    mov r8, [rbp - 72]
+    mov r9, [rbp - 80]
+    ;we find symmetrical x
+    mov r14, [rbp - 120] ;;;;;;;;;;;;;          needs a fix
+    sar r14, 1
+    sub r14, r8 
+
     
+    mov r12, 2
+
+
+color:   
     
     ;height
     mov r15, r9
     ;width
+    mov rax, 0
     mov eax, [rbp - 12]
     ;width/8
     sar rax, 3
@@ -257,6 +294,17 @@ colored:
     mov [r15], al
     
 ;__________________________________________________________________________________
+    
+    mov r8, r14
+    dec r12
+    cmp r12, 0
+    jnz color
+    
+
+
+sym_coloured:
+    add rsp, 56
+    
     movsd xmm4, xmm6
     movsd xmm5, xmm7
 
