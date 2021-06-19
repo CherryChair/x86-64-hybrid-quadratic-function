@@ -7,7 +7,7 @@
 #include <allegro5/allegro_ttf.h>
 #include "f.h"
 
-enum chosenParameter{A, B, C, D, Enter};
+enum chosenParameter{A, B, C, D, Z, Enter};
 
 
 
@@ -35,7 +35,22 @@ int main()
     al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
 
-    ALLEGRO_DISPLAY *disp = al_create_display(1920, 1080);
+    int height;
+    int width;
+    FILE * f;
+    f = fopen("in.bmp", "rb");
+    if (f == NULL) return 1;
+    for (int i=0; i<18; i++){
+        fgetc(f);
+    }
+    fread(&width, 4, 1, f);
+    fread(&height, 4, 1, f);
+    
+    fclose(f);
+    int widthPadding = width;
+    if (widthPadding % 32 != 0)
+        widthPadding += 32-widthPadding%32;
+    ALLEGRO_DISPLAY *disp = al_create_display(width, height);
     must_init(disp, "display");
 
     must_init(al_init_font_addon(), "font addon");
@@ -58,11 +73,12 @@ int main()
     bool redraw = true;
     ALLEGRO_EVENT event;
 
-    double a, b, c, d;
+    double a, b, c, d, Scale;
     a = 1;
     b = 2;
     c = 1;
     d = 1;
+    Scale = 10;
 
     enum chosenParameter keyPressed = Enter;
     
@@ -84,6 +100,8 @@ int main()
                 keyPressed = C;
             else if (event.keyboard.keycode == ALLEGRO_KEY_D)
                 keyPressed = D;
+            else if (event.keyboard.keycode == ALLEGRO_KEY_Z)
+                keyPressed = Z;
             else if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
                 keyPressed = Enter;
             else if (event.keyboard.keycode == ALLEGRO_KEY_UP)
@@ -102,6 +120,9 @@ int main()
                     break;
                 case D:
                     d += 0.1;
+                    break;
+                case Z:
+                    Scale += 0.1;
                     break;
                 
                 default:
@@ -122,8 +143,66 @@ int main()
                     c -= 0.1;
                     break;
                 case D:
-                    if (d >= 0.2)
-                        d -= 0.1;
+                    d -= 0.1;
+                    if (d < 0.5)
+                        d = 0.5;
+                    break;
+                case Z:
+                    Scale -= 0.1;
+                    if (Scale < 2)
+                        Scale = 2;
+                    break;
+                
+                default:
+                    break;
+                }
+            else if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT)
+                switch (keyPressed)
+                {
+                case A:
+                    a += 1;
+                    if (a > -0.05 && a < 0.05)
+                        a += 0.1;
+                    break;
+                case B:
+                    b += 1;
+                    break;
+                case C:
+                    c += 1;
+                    break;
+                case D:
+                    d += 1;
+                    break;
+                case Z:
+                    Scale += 1;
+                    break;
+                
+                default:
+                    break;
+                }
+            else if (event.keyboard.keycode == ALLEGRO_KEY_LEFT)
+                switch (keyPressed)
+                {
+                case A:
+                    a -= 1;
+                    if (a > -0.05 && a < 0.05)
+                        a -= 0.1;
+                    break;
+                case B:
+                    b -= 1;
+                    break;
+                case C:
+                    c -= 1;
+                    break;
+                case D:
+                    d -= 1;
+                    if (d < 0.5)
+                        d = 0.5;
+                    break;
+                case Z:
+                    Scale -= 1;
+                    if (Scale < 2)
+                        Scale = 2;
                     break;
                 
                 default:
@@ -147,39 +226,56 @@ int main()
 
         if (redraw && al_is_event_queue_empty(queue))
         {
-            if (keyPressed == Enter)
-            {
-                FILE * file;
-                file = fopen("in.bmp", "rb");
-                if (file == NULL) return 1;
-                fseek(file, 0, SEEK_END);
-                long int size = ftell(file);
-                fclose(file);
+            FILE * file;
+            file = fopen("in.bmp", "rb");
+            if (file == NULL) return 1;
+            fseek(file, 0, SEEK_END);
+            long int size = ftell(file);  
+            fclose(file);
 
-                file = fopen("in.bmp", "rb");
-                unsigned char * pPixelBuffer = (unsigned char *) malloc(size);
-                fread(pPixelBuffer, sizeof(unsigned char), size, file);
-                fclose(file);
+            file = fopen("in.bmp", "rb");
+            unsigned char * pPixelBuffer = (unsigned char *) malloc(size);
+            fread(pPixelBuffer, sizeof(unsigned char), size, file);
+            fclose(file);
 
-                drawQuadratic(pPixelBuffer, 1920, 1080, a, b, c, d);
+            drawQuadratic(pPixelBuffer, widthPadding, height, a, b, c, d, Scale);
 
-                file = fopen("output.bmp", "wb");
-                fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
-                fclose(file);
-                free(pPixelBuffer);
-        
-                currentFunction = al_load_bitmap("output.bmp");
-                must_init(currentFunction, "output bmp");
-            }
+            file = fopen("output.bmp", "wb");
+            fwrite(pPixelBuffer, sizeof(unsigned char), size, file);
+            fclose(file);
+            free(pPixelBuffer);
+    
+            currentFunction = al_load_bitmap("output.bmp");
+            must_init(currentFunction, "output bmp");
+
             al_clear_to_color(al_map_rgb(255, 255, 255));
             
             al_draw_bitmap(currentFunction, 0, 0, 0);
-            al_draw_line(0, 540, 1920, 540, al_map_rgb_f(0, 0, 0), 1);
-            al_draw_line(960, 0, 960, 1080, al_map_rgb_f(0, 0, 0), 1);
+            al_draw_line(0, height/2, width, height/2, al_map_rgb_f(0, 0, 0), 1);
+            al_draw_line(width/2, 0, width/2, height, al_map_rgb_f(0, 0, 0), 1);
+            int i = 0;
+            while (i<width/2)
+            {
+                i += (int) 10 * Scale;
+                al_draw_line(i+width/2, height/2-4, i+width/2, height/2+4, al_map_rgb_f(0, 0, 0), 1); 
+                al_draw_line(width/2-i, height/2-4, width/2-i, height/2+4, al_map_rgb_f(0, 0, 0), 1); 
+            }
+            i = 0;
+            while (i < height/2)
+            {
+                i += (int) 10 * Scale;
+                al_draw_line(width/2-4, i+height/2, width/2+4, i+height/2, al_map_rgb_f(0, 0, 0), 1);
+                al_draw_line(width/2-4, height/2-i, width/2+4, height/2-i, al_map_rgb_f(0, 0, 0), 1);
+            }
+            
+            
+            al_draw_textf(font, al_map_rgb(0, 0, 0), width/2+10*Scale, height/2-27, ALLEGRO_ALIGN_CENTER, "10");
+            al_draw_textf(font, al_map_rgb(0, 0, 0), width/2+5, height/2-10*Scale-14, ALLEGRO_ALIGN_LEFT, "10");
             al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 0, 0, "a = %.1f", a);
             al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 20, 0, "b = %.1f", b);
             al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 40, 0, "c = %.1f", c);
             al_draw_textf(font, al_map_rgb(0, 0, 0), 10, 60, 0, "d = %.1f", d);
+            al_draw_textf(font, al_map_rgb(0, 0, 0), width - 5, 0, ALLEGRO_ALIGN_RIGHT, "Zoom = %.1f", Scale);
             
             switch (keyPressed)
             {
@@ -194,6 +290,9 @@ int main()
                 break;
             case D:
                 al_draw_textf(font, al_map_rgb(255, 0, 0), 10, 60, 0, "d = %.1f", d);
+                break;
+            case Z:
+                al_draw_textf(font, al_map_rgb(255, 0, 0), width - 5, 0, ALLEGRO_ALIGN_RIGHT, "Zoom = %.1f", Scale);
                 break;
             default:
                 break;

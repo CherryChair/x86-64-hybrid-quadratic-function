@@ -6,7 +6,7 @@ drawQuadratic:
     push rbp
     mov rbp, rsp
 
-    sub rsp, 48
+    sub rsp, 56
     mov [rbp - 8], rdi      ;pixelBuffer
     mov [rbp - 12], esi     ;width
     mov [rbp - 16], edx     ;height
@@ -14,6 +14,7 @@ drawQuadratic:
     movsd [rbp - 32], xmm1  ;b
     movsd [rbp - 40], xmm2  ;c
     movsd [rbp - 48], xmm3  ;d
+    movsd [rbp - 56], xmm4  ;scale
 
     ;x = -b/2a
     movsd xmm4, xmm1
@@ -31,7 +32,6 @@ drawQuadratic:
     
 
 b_4_loop:
-    mov edx, [rbp - 16] ;potencjalnie do poprawy
 
     ;x_l = x, x_r = x+d
     movsd xmm6, xmm4
@@ -102,8 +102,8 @@ found:
     movsd xmm9, xmm5
 
     ;scale our coordinates
-    mulsd xmm8, [rel scale]
-    mulsd xmm9, [rel scale]
+    mulsd xmm8, [rbp - 56]
+    mulsd xmm9, [rbp - 56]
 
     ;convert to int
     cvtsd2si r8, xmm8
@@ -115,15 +115,15 @@ found:
     movsd xmm11, xmm7
 
     ;scale our coordinates
-    mulsd xmm10, [rel scale]
-    mulsd xmm11, [rel scale]
+    mulsd xmm10, [rbp - 56]
+    mulsd xmm11, [rbp - 56]
 
     cvtsd2si r10, xmm10
     cvtsd2si r11, xmm11
 
 
-    mov r12, rsi
-    mov r13, rdx
+    mov r12d, [rbp - 12]
+    mov r13d, [rbp - 16]
 
     ;size of quadrants
     sar r12, 1
@@ -141,7 +141,7 @@ draw:
     mulsd xmm12, [rel negative]
 
     ;we scale it and convert it
-    mulsd xmm12, [rel scale]
+    mulsd xmm12, [rbp - 56]
     cvtsd2si r14, xmm12
 
     ;we move it to proper place
@@ -153,13 +153,13 @@ draw:
     add r11, r13
 
     sub rsp, 56
-    mov [rbp - 72], r8      ;current x
-    mov [rbp - 80], r9      ;current y
-    mov [rbp - 88], r10     ;ending x
-    mov [rbp - 96], r11     ;ending y
-    mov [rbp - 104], r12    ;offset x
-    mov [rbp - 112], r13    ;offset y
-    mov [rbp - 120], r14    ;symmetrical
+    mov [rbp - 64], r8      ;current x
+    mov [rbp - 72], r9      ;current y
+    mov [rbp - 80], r10     ;ending x
+    mov [rbp - 88], r11     ;ending y
+    mov [rbp - 96], r12    ;offset x
+    mov [rbp - 104], r13    ;offset y
+    mov [rbp - 112], r14    ;symmetrical
 
 
 line:
@@ -205,36 +205,36 @@ find_line:
     
 
     ;a of the line (y_s-y_e)
-    mov r12, [rbp - 80]
-    mov r13, [rbp - 96]
-    sub r12, [rbp - 96]
-    ;b of the line (x_e-x_s)
-	mov r14, [rbp - 72]
+    mov r12, [rbp - 72]
     mov r13, [rbp - 88]
-    sub r13, [rbp - 72]
+    sub r12, [rbp - 88]
+    ;b of the line (x_e-x_s)
+	mov r14, [rbp - 64]
+    mov r13, [rbp - 80]
+    sub r13, [rbp - 64]
 
     ;c of the line   
-	mov r15, [rbp - 88]
-    imul r15, [rbp - 80]
-    mov r14, [rbp - 72]
-    imul r14, [rbp - 96]
+	mov r15, [rbp - 80]
+    imul r15, [rbp - 72]
+    mov r14, [rbp - 64]
+    imul r14, [rbp - 88]
     sub r14, r15    ;c
 
     sub rsp, 56
-    mov [rbp - 128], r8     ;w1 x
-    mov [rbp - 136], r9     ;w1 y
-    mov [rbp - 144], r10    ;w2 x
-    mov [rbp - 152], r11    ;w2 y
-    mov [rbp - 160], r12    ;line a
-    mov [rbp - 168], r13    ;line b
-    mov [rbp - 176], r14    ;line c
+    mov [rbp - 120], r8     ;w1 x
+    mov [rbp - 128], r9     ;w1 y
+    mov [rbp - 136], r10    ;w2 x
+    mov [rbp - 144], r11    ;w2 y
+    mov [rbp - 152], r12    ;line a
+    mov [rbp - 160], r13    ;line b
+    mov [rbp - 168], r14    ;line c
 
 draw_loop:
 
-    mov r8, [rbp - 72]
-    mov r9, [rbp - 80]
+    mov r8, [rbp - 64]
+    mov r9, [rbp - 72]
     ;we find symmetrical x
-    mov r10, [rbp - 120]
+    mov r10, [rbp - 112]
     sal r10, 1
     sub r10, r8 
     ;we set up condition to paint symmetrical point
@@ -243,11 +243,11 @@ draw_loop:
 color:
     ;we check whether height is not oob
     mov rax, 0
-    mov eax, [rbp - 12]
+    mov eax, [rbp - 16]
     cmp rax, r9
     jle switch_point
     cmp r9, 0
-    jle switch_point
+    jl switch_point
     ;height
     mov r15, r9
     ;width
@@ -317,6 +317,7 @@ case_7:
 colored:
     mov [r15], al
 
+
 switch_point:
     mov r8, r10
     dec r11
@@ -324,28 +325,28 @@ switch_point:
     jnz color
     
     ;we evaluate next possible 2 pixels
-    mov r10, [rbp - 72]
-    mov r11, [rbp - 80]
-    add r10, [rbp - 128]
-    add r11, [rbp - 136]
-    imul r10, [rbp - 160]
-    imul r11, [rbp - 168]
+    mov r10, [rbp - 64]
+    mov r11, [rbp - 72]
+    add r10, [rbp - 120]
+    add r11, [rbp - 128]
+    imul r10, [rbp - 152]
+    imul r11, [rbp - 160]
     add r10, r11
-    add r10, [rbp - 176]
+    add r10, [rbp - 168]
 
     cmp r10, 0
     jg second_pixel
     neg r10
 
 second_pixel:
-    mov r11, [rbp - 72]
-    mov r12, [rbp - 80]
-    add r11, [rbp - 144]
-    add r12, [rbp - 152]
-    imul r11, [rbp - 160]
-    imul r12, [rbp - 168]
+    mov r11, [rbp - 64]
+    mov r12, [rbp - 72]
+    add r11, [rbp - 136]
+    add r12, [rbp - 144]
+    imul r11, [rbp - 152]
+    imul r12, [rbp - 160]
     add r11, r12
-    add r11, [rbp - 176]
+    add r11, [rbp - 168]
 
     cmp r11, 0
     jg compare
@@ -356,29 +357,29 @@ compare:
     jg second_closer
 
 first_closer:
-    mov r10, [rbp - 72]
-    mov r11, [rbp - 80]
-    add r10, [rbp - 128]
-    add r11, [rbp - 136]
+    mov r10, [rbp - 64]
+    mov r11, [rbp - 72]
+    add r10, [rbp - 120]
+    add r11, [rbp - 128]
     jmp compare_to_next
     
 second_closer:
-    mov r10, [rbp - 72]
-    mov r11, [rbp - 80]
-    add r10, [rbp - 144]
-    add r11, [rbp - 152]
+    mov r10, [rbp - 64]
+    mov r11, [rbp - 72]
+    add r10, [rbp - 136]
+    add r11, [rbp - 144]
 
 compare_to_next:
-    mov r8, [rbp - 72]
-    mov r9, [rbp - 80]
-    mov [rbp - 72], r10
-    mov [rbp - 80], r11
+    mov r8, [rbp - 64]
+    mov r9, [rbp - 72]
+    mov [rbp - 64], r10
+    mov [rbp - 72], r11
 
 
 cmpr:
-    cmp r10, [rbp - 88]
+    cmp r10, [rbp - 80]
     jne draw_loop
-    cmp r11, [rbp - 96]
+    cmp r11, [rbp - 88]
     jne draw_loop
 
 
@@ -387,37 +388,34 @@ finish_line:
     
     movsd xmm4, xmm6
     movsd xmm5, xmm7
+    add rsp, 112
 
     mov r10, [rbp - 88]
-    mov r11, [rbp - 96]
 
-    mov r12, 0
-    mov r13, 0
-    mov r12d, [rbp - 12]
-    mov r13d, [rbp - 16]
+    mov r11, 0
+    mov r11d, [rbp - 16]
 
-    add rsp, 112
-b4_comp:
-    cmp r10, r12
-    jg end
-    cmp r10, 0
-    jl end
+;we check if y passed our screen, if so, we stop drawing
     
-    cmp r11, 0
-    jg y_pos
-    neg r11
-    cmp r11, r13
-    jg end
-    neg r11
-    jmp b_4_loop
-y_pos:
-    cmp r11, r13
-    jg end
+b4_comp:
+    ucomisd xmm0, [rel zero]
+    ja parabola_upwards
 
-
+    cmp r10, 0
+    jl ending
     jmp b_4_loop
 
-end:
+parabola_upwards:
+    cmp r10, r11
+    jg ending
+
+    
+
+
+
+    jmp b_4_loop
+
+ending:
     
 
     mov rsp, rbp
@@ -430,7 +428,3 @@ negative: dq -1.0
 zero: dq 0.0
 two: dq 2.0
 four: dq 4.0
-parameters: db `\naddr: %i width: %i height: %i a: %.1f b: %.1f c: %.1f S: %.1f\n`,0
-scale: dq 10.0
-coordinates: db `(%.5f, %.5f)\n`,0
-pixels: db `Pixels: (%i, %i)\n`,0
