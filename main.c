@@ -7,7 +7,7 @@
 #include <allegro5/allegro_ttf.h>
 #include "f.h"
 
-enum chosenParameter{A, B, C, D, Z, Enter};
+enum chosenParameter{A, B, C, D, Z};
 
 
 
@@ -25,7 +25,7 @@ int main()
     must_init(al_init(), "allegro");
     must_init(al_install_keyboard(), "keyboard");
 
-    ALLEGRO_TIMER *timer = al_create_timer(1.0 / 30.0);
+    ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60.0);
     must_init(timer, "timer");
 
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
@@ -80,7 +80,7 @@ int main()
     d = 1;
     Scale = 10;
 
-    enum chosenParameter keyPressed = Enter;
+    enum chosenParameter keyPressed = A;
     
 
     al_start_timer(timer);
@@ -102,8 +102,6 @@ int main()
                 keyPressed = D;
             else if (event.keyboard.keycode == ALLEGRO_KEY_Z)
                 keyPressed = Z;
-            else if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
-                keyPressed = Enter;
             else if (event.keyboard.keycode == ALLEGRO_KEY_UP)
                 switch (keyPressed)
                 {
@@ -226,6 +224,7 @@ int main()
 
         if (redraw && al_is_event_queue_empty(queue))
         {
+            
             FILE * file;
             file = fopen("in.bmp", "rb");
             if (file == NULL) return 1;
@@ -247,7 +246,8 @@ int main()
     
             currentFunction = al_load_bitmap("output.bmp");
             must_init(currentFunction, "output bmp");
-
+        
+            
             al_clear_to_color(al_map_rgb(255, 255, 255));
             
             al_draw_bitmap(currentFunction, 0, 0, 0);
