@@ -7,6 +7,9 @@
 #include <allegro5/allegro_ttf.h>
 #include "f.h"
 
+#define KEY_SEEN     1
+#define KEY_RELEASED 2
+
 enum chosenParameter{A, B, C, D, Z};
 
 
@@ -81,6 +84,11 @@ int main()
     Scale = 10;
 
     enum chosenParameter keyPressed = A;
+
+
+
+    unsigned char key[ALLEGRO_KEY_MAX];
+    memset(key, 0, sizeof(key));
     
 
     al_start_timer(timer);
@@ -90,7 +98,12 @@ int main()
 
         switch (event.type)
         {
+        case ALLEGRO_EVENT_TIMER:
+            redraw = true;
+            break;
+
         case ALLEGRO_EVENT_KEY_CHAR:
+        
             redraw = true;
             if (event.keyboard.keycode == ALLEGRO_KEY_A)
                 keyPressed = A;
